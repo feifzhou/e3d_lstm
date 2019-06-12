@@ -32,6 +32,7 @@ nsimulation=options.Ns
 Nt=options.Nt
 Nx=options.Nx
 Ny=options.Ny
+Nchannel=1
 
 x, y, a=f([[0, 9.2, 4.2, 33.3, 0.9], [3.1, -1.2, 12.2, 25.3, 0.2]], Nt, Nx, Ny)
 
@@ -75,13 +76,16 @@ nclips = nsteps//seq_len
 
 alldat=np.zeros((nsimulation, Nt, Nx, Ny),dtype=np.float32)
 
-dims=np.array([[1, Nx, Ny]], dtype=np.int32)
+dims=np.array([[Nchannel, Nx, Ny]], dtype=np.int32)
 
-clips=np.vstack([np.arange(0,nsteps,input_seq_len), np.full((nclips*2), input_seq_len)])
-clips=clips.astype(np.int32).T.reshape((-1,2,2)).transpose((1,0,2))
+def clips_from_data(dat, seq_len, input_seq_len):
+    nsteps, nchannel, nx, ny = dat.shape[:4]
+    nclips = nsteps//seq_len
+    clips=np.vstack([np.arange(0,nsteps,input_seq_len), np.full((nclips*2), input_seq_len)])
+    clips=clips.astype(np.int32).T.reshape((-1,2,2)).transpose((1,0,2))
+    return clips
 
 print("dims",dims)
-print("clips", clips.shape)
 
 if os.path.isfile(options.data):
     alldat=np.load(options.data)
@@ -107,6 +111,8 @@ if ntest<=0 or ntest>ntot:
     np.savez("data.npz", dims=dims, clips=clips, input_raw_data=alldat)
     print("all %d saved to data.npz"%(ntot))
 else:
-    np.savez("train.npz", dims=dims, clips=clips[:,:-ntest,:], input_raw_data=alldat[:-ntest])
-    np.savez("test.npz", dims=dims, clips=clips[:,0:ntest,:], input_raw_data=alldat[0:ntest])
-    print("saved %d to train.npz and %d to test.npz"%(ntot-ntest, ntest))
+    dat=alldat[:-ntest]
+    np.savez("train.npz", dims=dims, clips=clips_from_data(dat, seq_len, input_seq_len), input_raw_data=dat)
+    dat=alldat[-ntest:]
+    np.savez("valid.npz", dims=dims, clips=clips_from_data(dat, seq_len, input_seq_len), input_raw_data=dat)
+    print("saved %d to train.npz and %d to valid.npz"%(ntot-ntest, ntest))
