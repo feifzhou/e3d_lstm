@@ -26,7 +26,7 @@ from src.utils import preprocess
 import tensorflow as tf
 
 # -----------------------------------------------------------------------------
-FLAGS = tf.app.flags.FLAGS
+FLAGS = tf.app.flags
 
 FLAGS.DEFINE_string('train_data_paths', '', 'train data paths.')
 FLAGS.DEFINE_string('valid_data_paths', '', 'validation data paths.')
@@ -68,6 +68,7 @@ FLAGS.DEFINE_integer('n_gpu', 1,
                      'how many GPUs to distribute the training across.')
 FLAGS.DEFINE_boolean('allow_gpu_growth', True, 'allow gpu growth')
 
+FLAGS = tf.app.flags.FLAGS
 
 def main(_):
   """Main function."""
